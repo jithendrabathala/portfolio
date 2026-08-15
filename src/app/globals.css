@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+/*
+ * Placeholder palette — deliberately neutral. Art direction is a separate pass;
+ * no component references a raw colour, so swapping these values re-skins the
+ * whole site.
+ */
+@theme {
+  --color-bg: oklch(0.145 0.005 285);
+  --color-surface: oklch(0.196 0.006 285);
+  --color-line: oklch(0.28 0.008 285);
+  --color-fg: oklch(0.97 0.002 285);
+  --color-muted: oklch(0.68 0.012 285);
+  --color-accent: oklch(0.75 0.16 62);
+
+  /* Easings. Expo-out is the workhorse: fast start, long settle. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+
+  /* Section rhythm. Pinned sections multiply this to set scroll distance. */
+  --spacing-section: 12rem;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer base {
+  html {
+    /* Anchor nav between sections. Next 16 no longer overrides this during
+       navigation, so it applies cleanly — see data-scroll-behavior in layout. */
+    scroll-behavior: smooth;
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+  }
+
+  body {
+    /* The fixed WebGL canvas sits at z-0; all content stacks above it. */
+    position: relative;
+    z-index: 0;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Sticky-pinned sections break if an ancestor clips overflow. */
+    overflow-x: clip;
+  }
+
+  /* Keyboard focus stays visible everywhere. The custom cursor is additive and
+     must never be the only affordance. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+@layer utilities {
+  /* Opt-in for elements the custom cursor should react to. */
+  .cursor-target {
+    cursor: none;
+  }
+
+  /* Equalizer bars for the audio transport. Frozen by the reduced-motion
+     block below, which is the correct behaviour — the bars are decorative and
+     the play state is already conveyed by the icon and aria-pressed. */
+  .animate-eq {
+    animation: eq 900ms ease-in-out infinite;
+  }
+
+  /* 1-bit dither texture for technical accents. Pure CSS rather than an image
+     so it inherits colour and costs nothing to load. */
+  .dither-pattern {
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 1px,
+        currentColor 1px,
+        currentColor 2px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 1px,
+        currentColor 1px,
+        currentColor 2px
+      );
+    background-size: 3px 3px;
+  }
+}
+
+@keyframes eq {
+  0%,
+  100% {
+    transform: scaleY(0.25);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/*
+ * Reduced motion. `useMotionScale()` handles JS-driven displacement; this covers
+ * everything CSS-driven. Transitions are shortened rather than removed so the
+ * interface still acknowledges input.
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  /* biome-ignore-start lint/complexity/noImportantStyles: this override has to
+     beat utility classes and inline styles, which is the entire point — a
+     reduced-motion guarantee that loses a specificity fight is not a guarantee. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  /* biome-ignore-end lint/complexity/noImportantStyles: see above */
+}
