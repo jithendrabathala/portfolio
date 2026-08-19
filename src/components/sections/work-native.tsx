@@ -258,6 +258,8 @@ export function MetricRow({
   project: Project;
   className?: string;
 }) {
+  if (!project.metrics?.length) return null;
+
   return (
     <dl className={cn("grid grid-cols-3 gap-4", className)}>
       {project.metrics.map((metric) => (

@@ -1,29 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useInView, useScroll, useSpring } from "framer-motion";
+import * as m from "framer-motion/m";
+import { useRef } from "react";
 import { Container } from "@/components/layout/container";
-import { Reveal } from "@/components/motion/reveal";
 import { Section } from "@/components/scroll/section";
-import { experience } from "@/content/site";
+import { type ExperienceEntry, experience } from "@/content/site";
+import { usePrefersReducedMotion } from "@/lib/use-motion-scale";
 import { cn } from "@/lib/utils";
 
 /**
- * Roles held, as an expanding ledger.
+ * Roles held, as a timeline.
  *
- * Rows rather than a timeline on purpose — the Journey section owns the
- * timeline treatment, and running two spines on one page makes the second read
- * as a repeat rather than a new idea.
- *
- * The first row is open by default so the section never reads as a bare list
- * of headings.
+ * A spine fills as you scroll and each node lights when its role reaches the
+ * reading band, so the line doubles as a position indicator.
  */
 export function Experience() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const spineRef = useRef<HTMLDivElement>(null);
+  const prefersReduced = usePrefersReducedMotion();
+
+  const { scrollYProgress } = useScroll({
+    target: spineRef,
+    offset: ["start 0.75", "end 0.75"],
+  });
+
+  const scaleY = useSpring(scrollYProgress, {
+    stiffness: 220,
+    damping: 38,
+    mass: 0.35,
+  });
 
   return (
     <Section id="experience" className="py-32 sm:py-40">
       <Container>
-        <div className="mb-14 flex items-end justify-between gap-6">
+        <div className="mb-16 flex items-end justify-between gap-6">
           <h2 className="font-mono text-xs uppercase tracking-[0.3em] text-muted">
             Experience
           </h2>
@@ -32,86 +42,99 @@ export function Experience() {
           </span>
         </div>
 
-        <ol className="border-t border-line">
-          {experience.map((entry, i) => {
-            const isOpen = openIndex === i;
+        <div ref={spineRef} className="relative">
+          {/* Spine: hard left on mobile, centred once roles alternate. */}
+          <div
+            aria-hidden="true"
+            className="absolute bottom-0 left-[7px] top-0 w-px bg-line md:left-1/2 md:-translate-x-1/2"
+          >
+            <m.div
+              className="h-full w-full origin-top bg-accent"
+              style={{ scaleY: prefersReduced ? 1 : scaleY }}
+            />
+          </div>
 
-            return (
-              <li key={`${entry.company}-${entry.period}`}>
-                <Reveal delay={i * 0.05}>
-                  <div className="border-b border-line">
-                    <button
-                      type="button"
-                      onClick={() => setOpenIndex(isOpen ? null : i)}
-                      aria-expanded={isOpen}
-                      className="cursor-target group flex w-full flex-wrap items-baseline gap-x-6 gap-y-2 py-7 text-left"
-                    >
-                      <span className="font-mono text-xs tabular-nums text-muted/60">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-
-                      <span className="flex-1">
-                        <span
-                          className={cn(
-                            "block font-mono text-lg font-bold uppercase tracking-wider transition-colors sm:text-xl",
-                            isOpen
-                              ? "text-accent"
-                              : "text-fg group-hover:text-accent",
-                          )}
-                        >
-                          {entry.role}
-                        </span>
-                        <span className="mt-1 block font-mono text-xs uppercase tracking-widest text-muted">
-                          {entry.company}
-                        </span>
-                      </span>
-
-                      <span className="font-mono text-xs tabular-nums text-muted">
-                        {entry.period}
-                      </span>
-
-                      {/* Rotating cross doubles as the open/closed affordance. */}
-                      <span
-                        aria-hidden="true"
-                        className={cn(
-                          "relative size-3 transition-transform duration-300",
-                          isOpen && "rotate-45",
-                        )}
-                      >
-                        <span className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-muted" />
-                        <span
-                          className={cn(
-                            "absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-muted transition-opacity duration-300",
-                            isOpen && "opacity-0",
-                          )}
-                        />
-                      </span>
-                    </button>
-
-                    {/* grid-rows 0fr→1fr animates to auto height, which a
-                        max-height transition cannot do without a magic number
-                        that clips longer summaries. */}
-                    <div
-                      className={cn(
-                        "grid transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                        isOpen
-                          ? "grid-rows-[1fr] opacity-100"
-                          : "grid-rows-[0fr] opacity-0",
-                      )}
-                    >
-                      <div className="overflow-hidden">
-                        <p className="max-w-2xl pb-8 pl-10 leading-relaxed text-muted text-pretty">
-                          {entry.summary}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </Reveal>
-              </li>
-            );
-          })}
-        </ol>
+          <ol>
+            {experience.map((entry, i) => (
+              <Role
+                key={`${entry.company}-${entry.period}`}
+                entry={entry}
+                side={i % 2 === 0 ? "left" : "right"}
+              />
+            ))}
+          </ol>
+        </div>
       </Container>
     </Section>
+  );
+}
+
+function Role({
+  entry,
+  side,
+}: {
+  entry: ExperienceEntry;
+  side: "left" | "right";
+}) {
+  const ref = useRef<HTMLLIElement>(null);
+  const inView = useInView(ref, { once: false, margin: "-45% 0px -45% 0px" });
+
+  return (
+    <li
+      ref={ref}
+      className={cn(
+        "group relative pl-10 md:w-1/2 md:pl-0",
+        side === "left"
+          ? "md:pr-12 md:text-right"
+          : "md:ml-auto md:pl-12 md:text-left",
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute top-1.5 flex size-4 items-center justify-center rounded-full border transition-colors duration-500",
+          "left-0 md:left-auto",
+          side === "left"
+            ? "md:right-0 md:translate-x-1/2"
+            : "md:left-0 md:-translate-x-1/2",
+          inView ? "border-accent bg-bg" : "border-line bg-bg",
+        )}
+      >
+        <span
+          className={cn(
+            "size-1.5 rounded-full transition-colors duration-500",
+            inView ? "bg-accent" : "bg-line",
+          )}
+        />
+      </span>
+
+      <div className="pb-12 md:pb-16">
+        <span
+          className={cn(
+            "font-mono text-xs tabular-nums transition-colors duration-500",
+            inView ? "text-accent" : "text-muted",
+          )}
+        >
+          {entry.period}
+        </span>
+
+        <h3 className="mt-2 font-mono text-lg font-bold uppercase tracking-wider">
+          {entry.role}
+        </h3>
+
+        <span className="mt-1 block font-mono text-xs uppercase tracking-widest text-muted">
+          {entry.company}
+        </span>
+
+        <p
+          className={cn(
+            "mt-3 max-w-md leading-relaxed text-muted text-pretty",
+            side === "left" && "md:ml-auto",
+          )}
+        >
+          {entry.summary}
+        </p>
+      </div>
+    </li>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Download } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { KineticText } from "@/components/motion/kinetic-text";
 import { Magnetic } from "@/components/motion/magnetic";
@@ -27,14 +28,31 @@ export function Contact() {
         </Reveal>
 
         <Reveal delay={0.12}>
-          <Magnetic className="mt-12">
-            <a
-              href={`mailto:${profile.email}`}
-              className="cursor-target inline-flex items-center gap-3 rounded-full bg-fg px-7 py-4 text-base font-medium text-bg transition-colors hover:bg-accent"
-            >
-              {profile.email}
-            </a>
-          </Magnetic>
+          <div className="mt-12 flex flex-wrap items-center gap-4">
+            <Magnetic>
+              <a
+                href={`mailto:${profile.email}`}
+                className="cursor-target inline-flex items-center gap-3 rounded-full bg-fg px-7 py-4 text-base font-medium text-bg transition-colors hover:bg-accent"
+              >
+                {profile.email}
+              </a>
+            </Magnetic>
+
+            {/* `download` only wins same-origin, which this is — the file is
+                served out of public/. Browsers configured to open PDFs inline
+                may still preview it, so the label promises the file, not the
+                disposition. */}
+            <Magnetic>
+              <a
+                href={profile.resume}
+                download
+                className="cursor-target inline-flex items-center gap-2 rounded-full border border-line px-7 py-4 text-base font-medium text-fg transition-colors hover:border-accent hover:text-accent"
+              >
+                <Download aria-hidden="true" className="size-4" />
+                Résumé
+              </a>
+            </Magnetic>
+          </div>
         </Reveal>
 
         <Reveal delay={0.18}>

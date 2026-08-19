@@ -15,6 +15,8 @@ export const SECTION_IDS = [
   "experience",
   "stack",
   "about",
+  // Journey is not rendered (see app/page.tsx) but stays in the union so the
+  // parked section and its mood keep type-checking.
   "journey",
   "oss",
   "contact",
@@ -29,7 +31,7 @@ export const sections: { id: SectionId; label: string }[] = [
   { id: "experience", label: "Experience" },
   { id: "stack", label: "Stack" },
   { id: "about", label: "About" },
-  { id: "journey", label: "Journey" },
+  // { id: "journey", label: "Journey" },
   { id: "oss", label: "Open source" },
   { id: "contact", label: "Contact" },
 ];
@@ -49,7 +51,10 @@ export const profile = {
   /** Set to false to hide the availability pill. */
   available: true,
   availabilityNote: "Open to new work",
-  email: "you@example.com",
+  email: "jithendrabathala@gmail.com",
+  phone: "+91 90520 46768",
+  /** Served straight out of public/. Set to null to hide the download button. */
+  resume: "/resume.pdf",
 } as const;
 
 export type Project = {
@@ -65,8 +70,12 @@ export type Project = {
   year: string;
   role: string;
   stack: string[];
-  /** Headline outcomes. Keep to 2–3; they render as a small stat row. */
-  metrics: { label: string; value: string }[];
+  /**
+   * Headline outcomes. Keep to 2–3; they render as a small stat row. Omit the
+   * field entirely for a project with no numbers worth quoting — the row (and
+   * its rules) disappears rather than rendering empty.
+   */
+  metrics?: { label: string; value: string }[];
   /** Paragraphs for the expanded detail overlay. */
   body: string[];
   /**
@@ -79,88 +88,43 @@ export type Project = {
 
 export const projects: Project[] = [
   {
-    slug: "ledger-pipeline",
-    image: "/projects/ledger-pipeline.svg",
-    title: "Realtime Ledger Pipeline",
+    slug: "voisely",
+    image: "/projects/voisely.png",
+    title: "Voisely.ai",
     blurb:
-      "Rebuilt a nightly batch reconciliation into a streaming pipeline with exactly-once semantics.",
-    year: "2025",
-    role: "Lead engineer",
-    stack: ["Go", "Kafka", "Postgres", "Kubernetes"],
-    metrics: [
-      { label: "Reconciliation lag", value: "6h → 900ms" },
-      { label: "Throughput", value: "40k events/s" },
-      { label: "Manual interventions", value: "−94%" },
-    ],
+      "An AI calling agent that answers business calls in natural, multilingual speech — taking orders and bookings, and routing what it can't resolve to a human.",
+    year: "2025 — 2026",
+    role: "Team lead & developer",
+    stack: ["React", "Express", "LangChain", "RAG", "Kubernetes", "Redis"],
+    // No metrics: nothing measured is public yet. The stat row hides itself.
     body: [
-      "The existing system reconciled ledger entries in a nightly batch. Any mismatch surfaced the next morning, which meant a full day of downstream corrections and a standing rota to babysit it.",
-      "I replaced it with a streaming pipeline built on Kafka, using a transactional outbox on the write path and idempotent consumers keyed on entry id. Exactly-once was the hard requirement — double-applying a ledger entry is not a bug you get to fix quietly.",
-      "The migration ran both systems in parallel for six weeks, diffing outputs continuously until the streaming path matched the batch path on every entry. We cut over without a maintenance window.",
+      "Voisely picks up inbound calls for businesses that can't staff a phone line around the clock. It answers in natural, multilingual speech, handles orders and bookings end to end, and hands anything outside its remit to a person on the team rather than guessing.",
+      "The agent is grounded rather than freewheeling: retrieval over each business's own catalogue, hours, and policies means the answers come from their documents instead of the model's general knowledge. LangChain orchestrates retrieval and tool calls; a React front end handles configuration and call review, with an Express API behind it.",
+      "Call handling has to stay responsive while slower work — transcription, follow-ups, downstream syncs — happens off the critical path, so that work moves through Redis queues and the whole system runs on Kubernetes. Customer data stays inside the tenant's own boundary by design.",
+      "I led the team and built across the stack. Launching at voisely.ai.",
     ],
-    live: "https://example.com",
-    repo: "https://github.com/",
   },
   {
-    slug: "edge-cache",
-    image: "/projects/edge-cache.svg",
-    title: "Multi-Region Edge Cache",
+    slug: "wisein",
+    image: "/projects/wisein.png",
+    title: "WiseIN",
     blurb:
-      "A read-through cache layer with per-tenant invalidation across five regions.",
-    year: "2024",
-    role: "Backend engineer",
-    stack: ["Rust", "Redis", "gRPC", "Terraform"],
+      "An invite-only professional network where every member is government-verified, and conversations happen over video instead of cold DMs.",
+    year: "2025 — 2026",
+    role: "Team lead & developer",
+    stack: ["Next.js", "NestJS", "Postgres", "AWS", "CircleCI"],
     metrics: [
-      { label: "p99 read latency", value: "180ms → 12ms" },
-      { label: "Origin load", value: "−87%" },
-      { label: "Regions", value: "5" },
+      { label: "Verified members", value: "700+" },
+      { label: "Countries", value: "9" },
+      { label: "Access", value: "Invite-only" },
     ],
     body: [
-      "Read traffic was hitting the primary database from every region, and the p99 was dominated by cross-ocean round trips rather than by query time.",
-      "I built a read-through cache in Rust sitting in front of the data layer, with tag-based invalidation so a single tenant's write could evict precisely the affected keys without flushing a shared namespace.",
-      "The interesting problem was invalidation ordering under partition: a naive design could resurrect stale data when a region rejoined. Versioned tags and a monotonic write clock made stale resurrection impossible rather than unlikely.",
+      "Professional networks have an authenticity problem: anyone can claim anything, and the inbox fills with cold outreach from accounts nobody can vouch for. WiseIN starts from the opposite premise — you don't get in until you prove you're real.",
+      "Verification runs through Aadhaar and DigiLocker for members in India, and Stripe Identity for everyone else. That single constraint changes the product downstream: because identity is settled at the door, the network can lead with video meetings between members rather than text-based outreach.",
+      "The front end is Next.js, the services are NestJS over Postgres, and the whole thing runs on AWS with CircleCI shipping it. The verification flows were the demanding part — third-party identity providers fail in more interesting ways than they document, and a member half-verified is a state the system has to hold safely.",
+      "I led the team and built across the stack. It's live at wisein.in with 700+ verified members across 9 countries.",
     ],
-    repo: "https://github.com/",
-  },
-  {
-    slug: "schema-migrator",
-    image: "/projects/schema-migrator.svg",
-    title: "Zero-Downtime Schema Migrator",
-    blurb:
-      "An internal tool that plans and executes online Postgres migrations with automatic rollback.",
-    year: "2024",
-    role: "Creator",
-    stack: ["TypeScript", "Postgres", "GitHub Actions"],
-    metrics: [
-      { label: "Migrations shipped", value: "300+" },
-      { label: "Downtime incidents", value: "0" },
-      { label: "Median review time", value: "−60%" },
-    ],
-    body: [
-      "Schema changes were the single most common cause of incidents on the team — usually a lock taken on a large table during peak traffic.",
-      "The tool parses a proposed migration, classifies each statement by the lock it will take, and rejects or rewrites the dangerous ones into safe multi-step equivalents. Adding a NOT NULL column becomes add-nullable, backfill in batches, add constraint NOT VALID, validate.",
-      "It runs in CI, so unsafe migrations fail review rather than production. Three hundred migrations later, the downtime count is still zero.",
-    ],
-    live: "https://example.com",
-  },
-  {
-    slug: "trace-explorer",
-    image: "/projects/trace-explorer.svg",
-    title: "Distributed Trace Explorer",
-    blurb:
-      "A query interface over sampled traces that makes tail latency legible.",
-    year: "2023",
-    role: "Backend engineer",
-    stack: ["Python", "ClickHouse", "OpenTelemetry"],
-    metrics: [
-      { label: "Query p95", value: "8s → 400ms" },
-      { label: "Traces indexed", value: "2B" },
-      { label: "Teams onboarded", value: "12" },
-    ],
-    body: [
-      "We had traces but no practical way to ask questions of them. Finding why the p99 moved meant scrolling through individual spans and guessing.",
-      "I moved trace storage to ClickHouse with a schema designed around the queries people actually asked — group by endpoint, filter by duration percentile, compare against last week.",
-      "The win was less about storage and more about the query vocabulary. Once 'show me what's different about the slow requests' became one query, teams started answering their own latency questions.",
-    ],
+    live: "https://wisein.in",
   },
 ];
 
@@ -195,39 +159,76 @@ export const experience: ExperienceEntry[] = [
   },
 ];
 
+/**
+ * Icon vocabulary for the Stack section.
+ *
+ * Deliberately semantic ("cache") rather than per-vendor ("redis") — Lucide
+ * ships no brand marks, and a concept vocabulary means swapping the items below
+ * rarely needs a new icon. Keys map to components in sections/stack.tsx, which
+ * is exhaustive over this union, so adding a key here is a type error until the
+ * icon is picked there.
+ */
+export type StackIcon =
+  | "code"
+  | "types"
+  | "systems"
+  | "script"
+  | "query"
+  | "container"
+  | "infra"
+  | "stream"
+  | "database"
+  | "cache"
+  | "analytics"
+  | "network"
+  | "observability"
+  | "performance"
+  | "api"
+  | "incident";
+
+export type StackItem = { name: string; icon: StackIcon };
+
 /** Grouped for the marquee rows in the Stack section. */
-export const stack: { group: string; items: string[] }[] = [
+export const stack: { group: string; items: StackItem[] }[] = [
   {
-    group: "Languages",
-    items: ["Go", "Rust", "TypeScript", "Python", "SQL"],
-  },
-  {
-    group: "Infrastructure",
+    group: "Languages & Frameworks",
     items: [
-      "Kubernetes",
-      "Terraform",
-      "Kafka",
-      "Postgres",
-      "Redis",
-      "ClickHouse",
+      { name: "TypeScript", icon: "types" },
+      { name: "React", icon: "code" },
+      { name: "Next.js", icon: "code" },
+      { name: "Node.js", icon: "script" },
+      { name: "NestJS", icon: "api" },
+      { name: "Express", icon: "api" },
     ],
   },
   {
-    group: "Practice",
+    group: "Data & Infrastructure",
     items: [
-      "Distributed systems",
-      "Observability",
-      "Performance",
-      "API design",
-      "Incident response",
+      { name: "Postgres", icon: "database" },
+      { name: "Redis", icon: "cache" },
+      { name: "AWS", icon: "infra" },
+      { name: "Kubernetes", icon: "container" },
+      { name: "CircleCI", icon: "stream" },
+      { name: "SQL", icon: "query" },
+    ],
+  },
+  {
+    group: "AI & Practice",
+    items: [
+      { name: "LangChain", icon: "network" },
+      { name: "RAG", icon: "analytics" },
+      { name: "Voice agents", icon: "observability" },
+      { name: "API design", icon: "performance" },
     ],
   },
 ];
 
 export const socials: { label: string; href: string }[] = [
+  // TODO: real profile URLs still needed.
   { label: "GitHub", href: "https://github.com/" },
   { label: "LinkedIn", href: "https://linkedin.com/in/" },
   { label: "Email", href: `mailto:${profile.email}` },
+  { label: "Phone", href: `tel:${profile.phone.replace(/\s/g, "")}` },
 ];
 
 /**

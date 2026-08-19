@@ -11,8 +11,11 @@
  * than popping into place.
  *
  * z-30 sits above page content but below the rail, audio transport, project
- * overlay, and splash — the frame must never intercept a click, hence
+ * overlay, cursor, and splash — the frame must never intercept a click, hence
  * pointer-events-none as well.
+ *
+ * Full layer order: frame 30 · rail/audio 40 · project overlay 50 · cursor 60 ·
+ * splash 100.
  */
 export function ViewportFrame() {
   return (

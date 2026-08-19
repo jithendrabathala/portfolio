@@ -48,7 +48,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       // scrolling set in globals.css applies to anchors without also making
       // future route changes animate. See docs: upgrading/version-16.
       data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // `dark` is static, not toggled: the site has no light mode (see the
+      // colorScheme in viewport). shadcn's tokens live behind a `.dark` variant,
+      // so without this class its components render their light palette against
+      // this dark page.
+      className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-bg text-fg">
         {/* The splash is dismissed by JS, so without JS nothing would ever

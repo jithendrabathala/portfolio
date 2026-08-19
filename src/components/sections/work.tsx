@@ -177,6 +177,10 @@ export function MetricRow({
   project: (typeof projects)[number];
   className?: string;
 }) {
+  // The caller supplies the rules and padding, so an empty row would read as a
+  // stray divider. Render nothing at all instead.
+  if (!project.metrics?.length) return null;
+
   return (
     <dl className={className}>
       {project.metrics.map((metric) => (

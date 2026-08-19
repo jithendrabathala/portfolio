@@ -51,7 +51,11 @@ export function Cursor() {
   const isHovering = variant === "hover";
 
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-50">
+    // Above everything, including the z-50 project overlay — which renders
+    // after this in the layout tree and would otherwise win the tie and bury
+    // the cursor. Elements inside the overlay opt into `cursor-target`, so a
+    // buried cursor means no cursor at all there rather than just the native one.
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-60">
       <m.div
         className="absolute size-1.5 rounded-full bg-fg"
         style={{ x: dotX, y: dotY, translateX: "-50%", translateY: "-50%" }}
