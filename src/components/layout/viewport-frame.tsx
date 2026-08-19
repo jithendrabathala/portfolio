@@ -14,8 +14,8 @@
  * overlay, cursor, and splash — the frame must never intercept a click, hence
  * pointer-events-none as well.
  *
- * Full layer order: frame 30 · rail/audio 40 · project overlay 50 · cursor 60 ·
- * splash 100.
+ * Full layer order: frame 30 · rail/audio/nav transport 40 · project overlay
+ * and nav sheet 50 · cursor 60 · splash 100.
  */
 export function ViewportFrame() {
   return (

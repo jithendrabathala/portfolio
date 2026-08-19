@@ -25,7 +25,9 @@ export const SECTION_IDS = [
 export type SectionId = (typeof SECTION_IDS)[number];
 
 /**
- * The rail's dots — a deliberate subset, not the full page.
+ * The navigable destinations — a deliberate subset, not the full page. Drives
+ * the rail's dots on desktop and the mobile nav sheet below `md`, so both
+ * breakpoints offer the same set.
  *
  * Architecture, Stack, and Open source still render (see app/page.tsx); they
  * are simply not destinations worth a dot, and a rail with eight of them stops

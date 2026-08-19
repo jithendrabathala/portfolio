@@ -3,10 +3,11 @@
 import { AnimatePresence } from "framer-motion";
 import * as m from "framer-motion/m";
 import { Code2, ExternalLink } from "lucide-react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { LinkChip, MetricRow } from "@/components/sections/work";
 import { projects } from "@/content/site";
 import { useUIStore } from "@/lib/store";
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 import { useScrollLock } from "@/lib/use-scroll-lock";
 
 /**
@@ -127,45 +128,9 @@ function Overlay({
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    // Remember what had focus so it can be handed back on close — otherwise
-    // focus falls to the top of the document and a keyboard user loses place.
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    closeRef.current?.focus();
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-
-      if (e.key !== "Tab") return;
-
-      // Focus trap: keep Tab inside the dialog while it is modal.
-      const focusables = panelRef.current?.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      if (!focusables || focusables.length === 0) return;
-
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      previouslyFocused?.focus?.();
-    };
-  }, [onClose]);
+  // Escape, the Tab trap, and focus restoration — shared with the mobile nav
+  // sheet so both modals answer the keyboard the same way.
+  useDialogFocus({ panelRef, initialFocusRef: closeRef, onClose });
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain">

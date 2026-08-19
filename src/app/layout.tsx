@@ -6,6 +6,7 @@ import { ViewportFrame } from "@/components/layout/viewport-frame";
 import { Splash } from "@/components/loading/splash";
 import { Cursor } from "@/components/motion/cursor";
 import { MotionProvider } from "@/components/motion/motion-provider";
+import { MobileNav } from "@/components/scroll/mobile-nav";
 import { Rail } from "@/components/scroll/rail";
 import { ScrollDriver } from "@/components/scroll/scroll-driver";
 import { profile, siteMeta, socials } from "@/content/site";
@@ -128,7 +129,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <ScrollDriver />
           <SceneRoot />
           <Cursor />
+          {/* Two halves of the same navigation, split by breakpoint: the rail
+              is a hover interface, the sheet is a touch one. Each hides itself
+              where the other belongs. */}
           <Rail />
+          <MobileNav />
           <ViewportFrame />
           <AudioPlayer />
           {children}

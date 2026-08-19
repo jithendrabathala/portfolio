@@ -135,9 +135,21 @@
 }
 
 @layer utilities {
-  /* Opt-in for elements the custom cursor should react to. */
-  .cursor-target {
-    cursor: none;
+  /* Opt-in for elements the custom cursor should react to.
+   *
+   * The query mirrors FINE_POINTER in lib/breakpoints.ts, which is the same
+   * gate cursor.tsx mounts behind — the two have to agree. Hiding the native
+   * cursor anywhere the replacement does not render leaves the element with no
+   * pointer at all, which is how a touchscreen or a narrow window ends up with
+   * links that swallow the cursor and put nothing in its place. (Reduced motion
+   * is the third case; the block at the foot of this file handles it.)
+   *
+   * A browser too old to understand the query keeps its native cursor, which is
+   * the right way to fail. */
+  @media (min-width: 48rem) and (hover: hover) and (pointer: fine) {
+    .cursor-target {
+      cursor: none;
+    }
   }
 
   /* Equalizer bars for the audio transport and the hero's HUD readout. Frozen
@@ -246,6 +258,14 @@
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  /* cursor.tsx renders nothing under reduced motion, so the elements that gave
+     up the native cursor for it have to take it back. `revert` rather than a
+     value: a link should return to a pointer and a button to an arrow, which is
+     the browser's call, not ours. */
+  .cursor-target {
+    cursor: revert;
   }
 
   /* biome-ignore-start lint/complexity/noImportantStyles: this override has to

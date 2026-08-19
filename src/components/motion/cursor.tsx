@@ -3,6 +3,7 @@
 import { useMotionValue, useSpring } from "framer-motion";
 import * as m from "framer-motion/m";
 import { useEffect, useState } from "react";
+import { FINE_POINTER } from "@/lib/breakpoints";
 import { useUIStore } from "@/lib/store";
 import { usePrefersReducedMotion } from "@/lib/use-motion-scale";
 
@@ -13,8 +14,10 @@ import { usePrefersReducedMotion } from "@/lib/use-motion-scale";
  * via `.cursor-target`, and focus rings are untouched — a keyboard user should
  * never notice this exists.
  *
- * Renders nothing on coarse pointers (touch) and under reduced motion, where a
- * lagging ring is exactly the kind of thing that causes trouble.
+ * Renders nothing on touch, on mobile-width viewports, or under reduced motion.
+ * The `.cursor-target` rule in globals.css is scoped to exactly the same
+ * conditions: the two have to agree, or an element gives up the native cursor
+ * and gets nothing in its place.
  */
 export function Cursor() {
   const prefersReduced = usePrefersReducedMotion();
@@ -32,8 +35,19 @@ export function Cursor() {
   const ringY = useSpring(y, { stiffness: 220, damping: 22, mass: 0.5 });
 
   useEffect(() => {
-    // A mouse, not a finger. Touch devices get nothing.
-    setEnabled(window.matchMedia("(pointer: fine)").matches);
+    // A mouse on a desktop-width viewport — not a finger, and not the mobile
+    // layout, where the pointer this is standing in for does not exist.
+    //
+    // Subscribed rather than read once: a phone rotating into landscape, a
+    // window dragged narrow, or a mouse plugged into a tablet all cross this
+    // line without a remount, and a cursor left running on the wrong side of it
+    // is a dot parked in the corner of a touchscreen.
+    const query = window.matchMedia(FINE_POINTER);
+    const sync = () => setEnabled(query.matches);
+
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
   }, []);
 
   useEffect(() => {
