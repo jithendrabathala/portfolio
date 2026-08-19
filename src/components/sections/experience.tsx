@@ -124,6 +124,9 @@ function Role({
 
         <span className="mt-1 block font-mono text-xs uppercase tracking-widest text-muted">
           {entry.company}
+          {entry.location && (
+            <span className="text-muted/60"> · {entry.location}</span>
+          )}
         </span>
 
         <p
@@ -134,6 +137,26 @@ function Role({
         >
           {entry.summary}
         </p>
+
+        {/* Unmarked lines, not a bulleted list: the timeline alternates sides,
+            and list markers on right-aligned text sit away from their text. */}
+        {entry.highlights && (
+          <ul
+            className={cn(
+              "mt-4 max-w-md space-y-2 border-t border-line pt-4",
+              side === "left" && "md:ml-auto",
+            )}
+          >
+            {entry.highlights.map((highlight) => (
+              <li
+                key={highlight}
+                className="text-sm leading-relaxed text-muted/80 text-pretty"
+              >
+                {highlight}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </li>
   );

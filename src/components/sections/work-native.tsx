@@ -72,7 +72,7 @@ function OrbitTrack({ progress }: { progress: MotionValue<number> }) {
     <div ref={trackRef} className="relative h-svh overflow-hidden">
       <div className="absolute inset-x-0 top-[18%] z-20 px-[8vw]">
         <h2 className="font-mono text-xs uppercase tracking-[0.3em] text-muted">
-          Selected work
+          Crafted work
         </h2>
       </div>
 
@@ -156,7 +156,7 @@ function OrbitCard({
           >
             <div className="flex items-start justify-between gap-4 font-mono text-xs text-muted">
               <span>{String(index + 1).padStart(2, "0")}</span>
-              <span>{project.year}</span>
+              {project.year && <span>{project.year}</span>}
             </div>
 
             <div>
@@ -233,7 +233,7 @@ function WorkGrid() {
           >
             <div className="flex items-start justify-between gap-4 font-mono text-xs text-muted">
               <span>{String(i + 1).padStart(2, "0")}</span>
-              <span>{project.year}</span>
+              {project.year && <span>{project.year}</span>}
             </div>
             <div className="mt-8">
               <h3 className="font-mono text-xl font-bold uppercase tracking-wider">

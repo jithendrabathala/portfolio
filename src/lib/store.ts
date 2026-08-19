@@ -26,10 +26,6 @@ type UIState = {
   cursorVariant: CursorVariant;
   setCursorVariant: (variant: CursorVariant) => void;
 
-  /** Easter egg: multiplies motion intensity everywhere. */
-  chaos: boolean;
-  toggleChaos: () => void;
-
   /** True once the WebGL scene has mounted and rendered a frame. */
   sceneReady: boolean;
   setSceneReady: (ready: boolean) => void;
@@ -46,9 +42,6 @@ export const useUIStore = create<UIState>((set) => ({
   cursorVariant: "default",
   setCursorVariant: (variant) =>
     set((s) => (s.cursorVariant === variant ? s : { cursorVariant: variant })),
-
-  chaos: false,
-  toggleChaos: () => set((s) => ({ chaos: !s.chaos })),
 
   sceneReady: false,
   setSceneReady: (ready) => set({ sceneReady: ready }),

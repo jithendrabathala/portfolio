@@ -140,11 +140,43 @@
     cursor: none;
   }
 
-  /* Equalizer bars for the audio transport. Frozen by the reduced-motion
-     block below, which is the correct behaviour — the bars are decorative and
-     the play state is already conveyed by the icon and aria-pressed. */
+  /* Equalizer bars for the audio transport and the hero's HUD readout. Frozen
+     by the reduced-motion block below, which is the correct behaviour — the
+     bars are decorative and the play state is already conveyed by the icon and
+     aria-pressed. */
   .animate-eq {
     animation: eq 900ms ease-in-out infinite;
+  }
+
+  /* Terminal caret. `steps(1)` is what makes it a hard on/off blink — an eased
+     fade reads as a pulsing dot rather than a cursor. */
+  .animate-caret {
+    animation: caret 1s steps(1, end) infinite;
+  }
+
+  /* Telemetry dots. The dots hold still and the brightness travels along the
+     row — each fades up and back down, offset by a third of the cycle, so the
+     lit one appears to move. Duration is divisible by the dot count for that
+     reason. Same reduced-motion treatment. */
+  .animate-blip {
+    animation: blip 1200ms ease-in-out infinite;
+  }
+
+  /* Orbit cards: desaturated until pointed at, so the wall of screenshots
+     reads as one texture and the card under the cursor is the only one in
+     colour.
+
+     Hover is matched on the image's parent, not the image: the vendored
+     component sets `pointer-events: none` on every <img>, so `img:hover`
+     could never fire. Events land on the wrapper the img fills instead,
+     which also makes this work whether or not the card is wrapped in a link. */
+  .orbit-photos img {
+    filter: grayscale(1);
+    transition: filter 500ms var(--ease-out-expo);
+  }
+
+  .orbit-photos :hover > img {
+    filter: grayscale(0);
   }
 
   /* 1-bit dither texture for technical accents. Pure CSS rather than an image
@@ -176,6 +208,33 @@
   }
   50% {
     transform: scaleY(1);
+  }
+}
+
+@keyframes caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes blip {
+  0% {
+    opacity: 0.2;
+  }
+  /* Lit early and dim again well before the cycle ends, so at any moment one
+     dot is bright and the next is only starting to come up. A wider window
+     would light the whole row at once and the travel would disappear. */
+  15% {
+    opacity: 1;
+  }
+  45%,
+  100% {
+    opacity: 0.2;
   }
 }
 

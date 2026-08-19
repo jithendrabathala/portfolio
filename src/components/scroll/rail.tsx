@@ -2,7 +2,6 @@
 
 import { useSpring } from "framer-motion";
 import * as m from "framer-motion/m";
-import { useEffect } from "react";
 import { sections } from "@/content/site";
 import { scrollSignals } from "@/lib/scroll-signals";
 import { useUIStore } from "@/lib/store";
@@ -90,28 +89,4 @@ export function Rail() {
       </div>
     </nav>
   );
-}
-
-/**
- * Keyboard shortcut for chaos mode. Lives here because the rail is the only
- * always-mounted chrome; it renders nothing of its own.
- */
-export function ChaosShortcut() {
-  const toggleChaos = useUIStore((s) => s.toggleChaos);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      // Ignore while typing, and leave modified keys to the browser.
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const target = e.target as HTMLElement | null;
-      if (target?.matches("input, textarea, [contenteditable]")) return;
-
-      if (e.key.toLowerCase() === "c") toggleChaos();
-    };
-
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [toggleChaos]);
-
-  return null;
 }

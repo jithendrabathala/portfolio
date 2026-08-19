@@ -11,6 +11,12 @@ import OrbitProjectsRaw from "./orbit-project.js";
  *
  * Every field is optional: the module ships DEFAULT_ITEMS and DEFAULT_CONTENT
  * and renders standalone.
+ *
+ * Local modification to `orbit-project.js`: both card anchors carry
+ * `target="_blank" rel="noopener noreferrer"`. Upstream navigates in place,
+ * which would drop a visitor out of the portfolio onto a client's site with no
+ * way back except a history entry this page restores badly. Re-apply it if the
+ * component is ever pulled fresh from Framer.
  */
 
 export type OrbitItem = {

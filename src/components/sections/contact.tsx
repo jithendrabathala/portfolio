@@ -82,9 +82,7 @@ export function Contact() {
 
         <Reveal delay={0.24}>
           <p className="mt-16 font-mono text-xs text-muted/60">
-            {profile.location} · Press{" "}
-            <kbd className="rounded border border-line px-1.5 py-0.5">C</kbd>{" "}
-            for chaos
+            {profile.location} · {profile.signoff}
           </p>
         </Reveal>
       </Container>

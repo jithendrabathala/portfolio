@@ -87,7 +87,8 @@ export function AudioPlayer() {
     }
   }, [persist]);
 
-  // "M" toggles music, matching "C" for chaos mode.
+  // "M" toggles music. Typing is excluded so the shortcut cannot fire from a
+  // field, and modified keys are left to the browser.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;

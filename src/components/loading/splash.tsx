@@ -21,6 +21,28 @@ const MAX_VISIBLE_MS = 4000;
 const SCENE_GRACE_MS = 2200;
 
 /**
+ * Boot log. `at` is the percentage at which each line prints, and a line flips
+ * from pending to OK when the next one prints — so the sequence is always one
+ * step ahead of itself and never sits on a screen of finished work.
+ *
+ * The labels name real subsystems of this page, in the order they come up.
+ * Their timing is the progress curve rather than per-step instrumentation —
+ * only fonts and the WebGL scene report back — so treat these as a legend for
+ * what is loading, not as six separate measurements.
+ */
+const BOOT_LINES = [
+  { at: 0, label: "power-on self test" },
+  { at: 16, label: "mounting typefaces" },
+  { at: 34, label: "initialising webgl scene" },
+  { at: 52, label: "linking scroll timeline" },
+  { at: 70, label: "hydrating sections" },
+  { at: 86, label: "restoring audio state" },
+];
+
+/** Percentage at which the login line appears, just before the wipe. */
+const LOGIN_AT = 93;
+
+/**
  * First-load splash.
  *
  * Rendered on the server as visible, so there is no flash of the page before it
@@ -39,6 +61,9 @@ export function Splash() {
   const sceneReady = useUIStore((s) => s.sceneReady);
 
   const progress = useMotionValue(0);
+
+  /** Unix-ish account name, so the login line reads as a real shell. */
+  const username = profile.name.split(" ")[0].toLowerCase();
 
   useScrollLock(visible);
 
@@ -125,27 +150,65 @@ export function Splash() {
           </div>
 
           <div className="flex flex-1 items-center">
-            <div className="mx-auto w-full max-w-5xl">
-              <div
-                aria-hidden="true"
-                className="font-mono text-[clamp(4rem,22vw,16rem)] font-bold leading-none tabular-nums tracking-tighter"
-              >
-                {String(shown).padStart(3, "0")}
-              </div>
+            {/* aria-hidden as a block: the container already announces
+                "Loading", and a screen reader reciting six fake-looking boot
+                steps as they print would be noise, not information. */}
+            <div
+              aria-hidden="true"
+              className="mx-auto w-full max-w-3xl font-mono text-xs leading-relaxed sm:text-sm"
+            >
+              {/* Reserved height. Without it the block re-centres on every new
+                  line and the log jitters upward as it prints. */}
+              <div className="min-h-64">
+                <p className="text-fg">
+                  <span className="text-accent">$</span> boot --profile{" "}
+                  {username}
+                </p>
 
-              {/* Determinate bar. scaleX is composited; width would not be. */}
-              <div className="mt-6 h-px w-full bg-line">
-                <m.div
-                  className="h-full origin-left bg-accent"
-                  style={{ scaleX: progress }}
-                />
+                <div className="mt-4 space-y-1">
+                  {BOOT_LINES.map((line, i) => {
+                    if (shown < line.at) return null;
+                    const next = BOOT_LINES[i + 1];
+                    const done = next ? shown >= next.at : shown >= LOGIN_AT;
+
+                    return (
+                      <p key={line.label} className="text-muted">
+                        <span
+                          className={done ? "text-accent" : "text-muted/50"}
+                        >
+                          [{done ? " ok " : " .. "}]
+                        </span>{" "}
+                        {line.label}
+                      </p>
+                    );
+                  })}
+                </div>
+
+                {shown >= LOGIN_AT && (
+                  <p className="mt-4 text-fg">
+                    <span className="text-accent">login:</span> {username}
+                    <span className="animate-caret ml-0.5 inline-block">▊</span>
+                  </p>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
-            <span>Loading</span>
-            <span>{profile.location}</span>
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted">
+            {/* Determinate bar. scaleX is composited; width would not be. */}
+            <div className="mb-3 h-px w-full bg-line">
+              <m.div
+                className="h-full origin-left bg-accent"
+                style={{ scaleX: progress }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="tabular-nums">
+                Booting {String(shown).padStart(3, "0")}%
+              </span>
+              <span>{profile.location}</span>
+            </div>
           </div>
         </m.div>
       )}

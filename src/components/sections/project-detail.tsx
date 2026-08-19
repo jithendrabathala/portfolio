@@ -43,7 +43,9 @@ export function ProjectDetail() {
                   {project.title}
                 </m.h2>
                 <p className="mt-3 font-mono text-xs uppercase tracking-widest text-muted">
-                  {project.role} · {project.year}
+                  {project.year
+                    ? `${project.role} · ${project.year}`
+                    : project.role}
                 </p>
               </div>
             </div>

@@ -55,7 +55,7 @@ const ICONS: Record<StackIcon, LucideIcon> = {
  * moves faster at the same duration. These are tuned per row to land at a
  * similar apparent speed while keeping the rows out of lockstep.
  */
-const ROW_DURATIONS = ["58s", "46s", "38s"];
+const ROW_DURATIONS = ["58s", "69s", "38s"];
 
 /**
  * Marquee rows, alternating direction for a counter-scrolling texture.

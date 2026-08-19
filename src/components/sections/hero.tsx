@@ -12,6 +12,12 @@ import { scrollSignals } from "@/lib/scroll-signals";
 /** Deterministic bar heights. Math.random() here would desync SSR and hydration. */
 const SIGNAL_BARS = [6, 11, 4, 14, 8, 5, 12, 7];
 
+/**
+ * Offsets for the telemetry dots. Evenly spaced across the 1200ms `blip` cycle
+ * so the bright one walks the row; bunch them tighter and it reads as a blink.
+ */
+const RENDER_DOTS = ["0ms", "400ms", "800ms"];
+
 export function Hero() {
   // The hero dissolves as it leaves rather than merely scrolling away.
   const opacity = useTransform(scrollSignals.progress, [0, 0.08], [1, 0]);
@@ -51,8 +57,17 @@ export function Hero() {
               aria-hidden="true"
               className="dither-pattern absolute -left-4 top-0 hidden h-full w-1 opacity-40 lg:block"
             />
-            <h1 className="font-mono text-[clamp(2rem,7.5vw,5.5rem)] font-bold uppercase leading-[1.02] tracking-[0.06em]">
-              <KineticText text={profile.name} />
+            {/* One word per line. Splitting on the space rather than hard-coding
+                two lines keeps this honest for any name; each word is its own
+                KineticText so the per-character repel still works across the
+                break. Ceiling is sized so the longest word clears the container
+                at max width — raise it and "JITHENDRA" starts to overflow. */}
+            <h1 className="font-mono text-[clamp(2.5rem,13vw,8rem)] font-bold uppercase leading-[0.9] tracking-[0.06em]">
+              {profile.name.split(" ").map((word) => (
+                <span key={word} className="block">
+                  <KineticText text={word} />
+                </span>
+              ))}
             </h1>
           </div>
 
@@ -148,13 +163,16 @@ function HudFooter() {
       <Container className="flex items-center justify-between py-2.5">
         <div className="flex items-center gap-4 font-mono text-[9px] uppercase tracking-wider text-muted">
           <span>Scroll</span>
-          <div aria-hidden="true" className="hidden gap-1 lg:flex">
+          <div aria-hidden="true" className="hidden items-end gap-1 lg:flex">
             {SIGNAL_BARS.map((height, i) => (
               <div
                 // biome-ignore lint/suspicious/noArrayIndexKey: fixed decoration
                 key={i}
-                className="w-1 bg-fg/30"
-                style={{ height }}
+                // Scaled from the base so the row reads as an equalizer rather
+                // than bars growing out of their own middle. The stagger is
+                // what keeps it from pumping as one block.
+                className="animate-eq w-1 origin-bottom bg-fg/30"
+                style={{ height, animationDelay: `${i * 90}ms` }}
               />
             ))}
           </div>
@@ -162,16 +180,15 @@ function HudFooter() {
 
         <div className="flex items-center gap-3 font-mono text-[9px] uppercase tracking-wider text-muted">
           <span className="hidden lg:inline">Rendering</span>
-          <div aria-hidden="true" className="flex gap-1">
-            <span className="size-1 animate-pulse rounded-full bg-fg/60" />
-            <span
-              className="size-1 animate-pulse rounded-full bg-fg/40"
-              style={{ animationDelay: "0.2s" }}
-            />
-            <span
-              className="size-1 animate-pulse rounded-full bg-fg/20"
-              style={{ animationDelay: "0.4s" }}
-            />
+          <div aria-hidden="true" className="flex items-center gap-1">
+            {RENDER_DOTS.map((delay, i) => (
+              <span
+                // biome-ignore lint/suspicious/noArrayIndexKey: fixed decoration
+                key={i}
+                className="animate-blip size-1 rounded-full bg-fg"
+                style={{ animationDelay: delay }}
+              />
+            ))}
           </div>
         </div>
       </Container>

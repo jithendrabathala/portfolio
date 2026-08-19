@@ -35,15 +35,17 @@ export function Work() {
       projects.map((project) => ({
         image: project.image,
         label: project.title,
-        // Deliberately no `link`: the component would navigate away on click,
-        // and the case study lives in an in-page overlay instead. The index
-        // below owns all navigation.
+        // Live site first, source second, nothing at all if a project has
+        // neither — the component only wraps a card in an anchor when this is
+        // truthy, so those cards stay inert rather than linking nowhere. The
+        // case study overlay is still reached from the index below.
+        link: project.live ?? project.repo,
       })),
     [],
   );
 
   return (
-    <Section id="work">
+    <Section id="work" className="orbit-photos">
       {/* No height wrapper here on purpose. The component renders its own
           ORBIT_SCROLL_LENGTH-tall section containing a sticky viewport, so it
           must be free to size itself. Constraining it to h-svh made a ~420vh
@@ -56,7 +58,7 @@ export function Work() {
         content={{
           showCopy: true,
           textColor: "#f5f5f7",
-          leftTitle: "SELECTED",
+          leftTitle: "CRAFTED",
           rightTitle: "WORK",
           centerText:
             "Systems built where correctness and latency argue with each other.",
@@ -105,9 +107,11 @@ function ProjectIndex() {
                 </button>
 
                 <div className="flex items-center gap-2">
-                  <span className="mr-2 font-mono text-xs tabular-nums text-muted">
-                    {project.year}
-                  </span>
+                  {project.year && (
+                    <span className="mr-2 font-mono text-xs tabular-nums text-muted">
+                      {project.year}
+                    </span>
+                  )}
 
                   {project.repo && (
                     <LinkChip

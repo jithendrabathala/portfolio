@@ -24,15 +24,19 @@ export const SECTION_IDS = [
 
 export type SectionId = (typeof SECTION_IDS)[number];
 
+/**
+ * The rail's dots — a deliberate subset, not the full page.
+ *
+ * Architecture, Stack, and Open source still render (see app/page.tsx); they
+ * are simply not destinations worth a dot, and a rail with eight of them stops
+ * reading as navigation. Scrolling through one leaves every dot inactive,
+ * which is correct: the progress bar above them still tracks position.
+ */
 export const sections: { id: SectionId; label: string }[] = [
   { id: "hero", label: "Intro" },
   { id: "work", label: "Work" },
-  { id: "architecture", label: "Architecture" },
   { id: "experience", label: "Experience" },
-  { id: "stack", label: "Stack" },
   { id: "about", label: "About" },
-  // { id: "journey", label: "Journey" },
-  { id: "oss", label: "Open source" },
   { id: "contact", label: "Contact" },
 ];
 
@@ -48,6 +52,8 @@ export const profile = {
     "I care about the unglamorous parts: observability that tells you the truth, migrations that don't need a maintenance window, and code the next person can delete safely.",
   ],
   location: "India",
+  /** Closing line under the contact links. Sits after the location. */
+  signoff: "Happiest when the graph goes up and the latency doesn't",
   /** Set to false to hide the availability pill. */
   available: true,
   availabilityNote: "Open to new work",
@@ -67,7 +73,12 @@ export type Project = {
   image: string;
   /** One line, shown on the card. */
   blurb: string;
-  year: string;
+  /**
+   * Optional. Omit it entirely for work with no meaningful single date — the
+   * card slot and the ` · ` separator in the detail header both disappear
+   * rather than rendering a dangling divider.
+   */
+  year?: string;
   role: string;
   stack: string[];
   /**
@@ -126,36 +137,149 @@ export const projects: Project[] = [
     ],
     live: "https://wisein.in",
   },
+  {
+    slug: "file-storage-system",
+    image: "/projects/file-storage-system.svg",
+    title: "File Storage System",
+    blurb:
+      "A distributed, S3-compatible object store with automatic image and video transformation, deployable to Lambda, Azure, GCP, or your own servers from one codebase.",
+    year: "2026",
+    role: "Solo — design & build",
+    stack: ["TypeScript", "Express", "RabbitMQ", "Terraform", "Docker", "AWS"],
+    metrics: [
+      { label: "API", value: "S3-compatible" },
+      { label: "Deploy targets", value: "4" },
+      { label: "Transforms", value: "Image + video" },
+    ],
+    body: [
+      "Storage decisions tend to be one-way doors: pick a provider, and the SDK calls spread through the codebase until moving costs a rewrite. This is a storage layer that speaks the S3 API — buckets, objects, multipart upload, presigned URLs — so anything already written against S3 keeps working, while the thing underneath stays swappable.",
+      "The same codebase deploys to AWS Lambda, Azure Functions, GCP Cloud Functions, or a physical server. Terraform provisions each target and Ansible handles the on-prem path; locally the whole system comes up under Docker Compose.",
+      "Transformation is the part that can't be inline. Uploads return as soon as the object lands, and image work (Sharp) and video work (FFmpeg) go through RabbitMQ instead — which also gives bulk ingest of thousands of files and chunked uploads with automatic reassembly somewhere to run without holding a request open.",
+      "Built solo, end to end. The source is on GitHub.",
+    ],
+    repo: "https://github.com/jithendrabathala/file-storage-system",
+  },
+  {
+    slug: "visionicx",
+    image: "/projects/visionicx.png",
+    title: "VisionicX",
+    blurb:
+      "A campus management platform for schools and colleges — academics, fees, transport, hostel, HR and finance behind one login, wired to the attendance, CCTV and energy hardware already on site.",
+    year: "2023 — 2025",
+    role: "Full-stack developer",
+    stack: ["React", "NestJS", "Postgres", "Android"],
+    metrics: [
+      { label: "Modules", value: "18+" },
+      { label: "Platforms", value: "Web + Android" },
+      { label: "Access", value: "Role-based" },
+    ],
+    body: [
+      "Schools rarely run one system. They run a fee package, a separate attendance register, a transport sheet, a hostel ledger, and a WhatsApp group holding it together — and none of them agree with each other. VisionicX replaces that with a single platform where academics, fees, transport, library, hostel, HR, and finance are modules of one product rather than five procurement decisions.",
+      "Every stakeholder gets one login and sees only their slice: an admin configures policies and permissions, a teacher works a class, a parent sees their own children's attendance, marks, fees, and announcements and nothing else. Permissions are role-based with audit logs, which matters when the data is minors' records and money.",
+      "The part that isn't ordinary CRUD is the campus itself. The platform integrates with biometric, RFID, and face-recognition attendance devices, AI CCTV for safety alerts, and energy monitoring on single- and three-phase panels — so the dashboard reflects the building, not just what someone typed into it. A React front end sits on NestJS services over Postgres, with Android apps for staff and parents.",
+      "Built with the team at VisionariesAI. Live at visionicx.com.",
+    ],
+    live: "https://visionicx.com",
+  },
+  {
+    slug: "apnakartz-billing",
+    image: "/projects/apnakartz-billing.png",
+    title: "ApnaKartz Billing",
+    blurb:
+      "A multi-company billing and inventory platform for Indian businesses — quotation to invoice, stock that moves when documents convert, and GSTR-1 that falls out of the ledger instead of a spreadsheet.",
+    year: "2024 — 2026",
+    role: "Solo — design & build",
+    stack: ["React", "Redux Toolkit", "Node.js", "Express", "Postgres", "GST"],
+    metrics: [
+      { label: "Tenancy", value: "Multi-company" },
+      { label: "Filing", value: "GSTR-1 + HSN" },
+      { label: "Roles", value: "3 tiers" },
+    ],
+    body: [
+      "Small distributors run on documents that turn into other documents: a quotation becomes a pre-order, a pre-order becomes a purchase order, a purchase order becomes a delivery challan, and somewhere in there stock is supposed to move. Most billing software treats those as separate forms and leaves the arithmetic to the person at the counter. Here each conversion is a first-class action, and stock adjusts on the conversion that actually means goods changed hands.",
+      "Compliance is the reason this class of software exists in India, so GST is built into the ledger rather than bolted on at filing time. Invoices carry GSTIN and HSN/SAC codes, and GSTR-1 — including the B2B and B2C HSN summaries — is generated from the same records that produced the invoices, so filing is a read rather than a reconciliation.",
+      "One account can hold several companies, each with its own books, staff, and permissions across three role tiers. Invoices print through a template designer where the layout, visibility, and ordering of every block on the document is configurable on a live mockup — because no two businesses agree on what an invoice should look like, and a hardcoded template is a support ticket per customer.",
+      "There's a second half for personal finance: loans with interest ledgers on both sides of a lend, insurance policies, rentals, vehicles, and construction projects tracked alongside the business books. Built solo — React and Redux Toolkit on the front, an Express API over Postgres behind it, Recharts for reporting, and client-side PDF generation for every document.",
+    ],
+    live: "https://billing.apnakartz.com",
+  },
+  {
+    slug: "peptipharmarx",
+    image: "/projects/peptipharmarx.png",
+    title: "PeptiPharmaRX",
+    blurb:
+      "A B2B application site for a US peptide supplier — one scroll that qualifies a licensed practice and hands it to a form, rather than a storefront.",
+    year: "2026",
+    role: "Frontend developer",
+    stack: ["Next.js", "React", "Tailwind CSS", "Framer Motion", "Vercel"],
+    // No metrics: the numbers on the page are the client's business claims,
+    // not outcomes I measured, so the stat row stays off.
+    body: [
+      "PeptiPharmaRX supplies peptides to licensed medical practices, not to patients — which makes this the rare landing page whose job is to turn most of its visitors away. The whole page is built around one question: does the reader run a registered practice? Everything else exists to get a qualified one to the application form.",
+      "So the structure is a single scroll rather than a catalogue: the claim, the proof numbers, the compounds carried, the three things an applicant needs, and the supply-chain promise — then an embedded application form. The visual register is deliberately closer to a clinical brand than a consumer store, because the reader is a practitioner deciding whether to trust a supplier.",
+      "Built in the Next.js App Router with Tailwind and Framer Motion, prerendered and served from Vercel so the first paint is static and the motion only starts once a section is actually in view.",
+    ],
+    live: "https://book.peptipharmarx.com",
+  },
 ];
 
 export type ExperienceEntry = {
   company: string;
   role: string;
   period: string;
+  /** Optional. Rendered after the company, separated by a middot. */
+  location?: string;
+  /** One line framing the role. */
   summary: string;
+  /**
+   * Optional. The specifics worth quoting — rendered as unmarked lines rather
+   * than a bulleted list, because the timeline alternates sides and markers on
+   * right-aligned text read as debris.
+   */
+  highlights?: string[];
 };
 
 export const experience: ExperienceEntry[] = [
   {
-    company: "Placeholder Systems",
-    role: "Senior Software Engineer",
-    period: "2024 — Present",
+    company: "Prismex Technologies Pvt Ltd",
+    role: "Junior Fullstack Developer",
+    period: "Oct 2025 — Mar 2026",
+    location: "Hyderabad, India",
     summary:
-      "Lead the data platform team. Own the streaming infrastructure and the reliability targets that hang off it.",
+      "Backend services in Java and Spring Boot, and the end-to-end build of Voisely.ai — system design through to the React front end.",
+    highlights: [
+      "Architected and built Voisely.ai end to end: system design, the scalable architecture under it, and a React front end over the backend APIs.",
+      "Cut overall response times by 80% through query optimization, caching, and backend work.",
+      "Held API latency under 40 ms, with database queries down to single-digit milliseconds.",
+      "Moved the deployment from serverless to serverful on AWS EC2, which is where the reliability came from.",
+    ],
   },
   {
-    company: "Example Labs",
-    role: "Software Engineer",
-    period: "2022 — 2024",
+    company: "Edurup School of Business",
+    role: "Software Development Engineer Intern",
+    period: "Jun 2025 — Aug 2025",
+    location: "Remote, India",
     summary:
-      "Built backend services for a multi-tenant product. Took the API from a single region to five.",
+      "Built the backend architecture for a learning management system, and the React components sitting on top of it.",
+    highlights: [
+      "Designed a scalable LMS backend — REST APIs over modular services.",
+      "Developed React components for the learner-facing app.",
+      "Added caching and backend optimizations to bring response times down.",
+      "Improved SEO and load performance across the landing pages.",
+    ],
   },
   {
-    company: "Sample Co",
-    role: "Junior Engineer",
-    period: "2021 — 2022",
+    company: "Imminity Pvt Ltd",
+    role: "Front-End Developer Intern",
+    period: "Jun 2024 — Jan 2025",
+    location: "Remote, India",
     summary:
-      "Worked across the stack on internal tooling. Learned what production actually means.",
+      "Front-end work across a live consumer app, an internal e-commerce platform, and the dashboards behind both.",
+    highlights: [
+      "Improved and productionized the ParentG app — features, fixes, and a stable live release.",
+      "Built front-end modules for an internal e-commerce platform.",
+      "Developed internal dashboards for analytics and operational use.",
+    ],
   },
 ];
 
@@ -206,8 +330,11 @@ export const stack: { group: string; items: StackItem[] }[] = [
     items: [
       { name: "Postgres", icon: "database" },
       { name: "Redis", icon: "cache" },
+      { name: "RabbitMQ", icon: "stream" },
       { name: "AWS", icon: "infra" },
+      { name: "Terraform", icon: "infra" },
       { name: "Kubernetes", icon: "container" },
+      { name: "Docker", icon: "container" },
       { name: "CircleCI", icon: "stream" },
       { name: "SQL", icon: "query" },
     ],
@@ -224,9 +351,11 @@ export const stack: { group: string; items: StackItem[] }[] = [
 ];
 
 export const socials: { label: string; href: string }[] = [
-  // TODO: real profile URLs still needed.
-  { label: "GitHub", href: "https://github.com/" },
-  { label: "LinkedIn", href: "https://linkedin.com/in/" },
+  { label: "GitHub", href: "https://github.com/jithendrabathala" },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/in/jithendra-bathala/",
+  },
   { label: "Email", href: `mailto:${profile.email}` },
   { label: "Phone", href: `tel:${profile.phone.replace(/\s/g, "")}` },
 ];
@@ -430,8 +559,13 @@ export type Repository = {
   name: string;
   description: string;
   language: string;
-  stars: number;
-  forks: number;
+  /**
+   * Both optional. A repo with no traction yet renders its language and
+   * nothing else — advertising a row of zeroes reads worse than omitting the
+   * counts, and setting a number brings the chip back.
+   */
+  stars?: number;
+  forks?: number;
   url: string;
 };
 
@@ -443,50 +577,57 @@ export const oss: {
   repositories: Repository[];
 } = {
   username: "jithendrabathala",
-  profileUrl: "https://github.com/",
+  profileUrl: "https://github.com/jithendrabathala",
   blurb:
     "Tools I extracted from problems I hit at work, then cleaned up enough to hand to someone else.",
   stats: [
-    { label: "Repositories", value: "24" },
-    { label: "Contributions", value: "1.4k" },
-    { label: "Stars earned", value: "820" },
-    { label: "Years active", value: "6" },
+    { label: "Repositories", value: "58" },
+    { label: "Followers", value: "18" },
+    { label: "Languages", value: "5" },
+    { label: "Since", value: "2020" },
   ],
   repositories: [
     {
-      name: "pgshift",
+      name: "file-storage-system",
       description:
-        "Online Postgres migrations that refuse to take a lock they cannot afford.",
+        "A distributed, S3-compatible object store with queue-driven image and video transformation. One codebase, deployed to Lambda, Azure, GCP, or your own hardware.",
       language: "TypeScript",
-      stars: 412,
-      forks: 28,
-      url: "https://github.com/",
+      url: "https://github.com/jithendrabathala/file-storage-system",
     },
     {
-      name: "outbox-go",
+      name: "express-ts-template",
       description:
-        "Transactional outbox for Go services. Exactly-once publishing without a distributed transaction.",
-      language: "Go",
-      stars: 236,
-      forks: 19,
-      url: "https://github.com/",
+        "An Express 5 and TypeScript starter carrying the parts you always end up adding anyway: Drizzle over Postgres, Zod schemas that generate their own OpenAPI reference, argon2, JWTs, and structured logging.",
+      language: "TypeScript",
+      url: "https://github.com/jithendrabathala/express-ts-template",
     },
     {
-      name: "tagcache",
+      name: "serverless-mailer-app",
       description:
-        "Read-through cache with tag-based invalidation and partition-safe ordering.",
-      language: "Rust",
-      stars: 118,
-      forks: 11,
-      url: "https://github.com/",
+        "A small Hono mail API built to deploy serverless — Zod-validated payloads, Nodemailer transport, nothing else in the way.",
+      language: "TypeScript",
+      url: "https://github.com/jithendrabathala/serverless-mailer-app",
     },
     {
-      name: "traceql-lite",
-      description: "A small query vocabulary for asking why the p99 moved.",
-      language: "Python",
-      stars: 54,
-      forks: 6,
-      url: "https://github.com/",
+      name: "snap-to-focus",
+      description:
+        "Fourteen lines of Hammerspoon that move the pointer to whichever window just took focus — so the scroll wheel finally hits the window you're actually working in.",
+      language: "Lua",
+      url: "https://github.com/jithendrabathala/snap-to-focus",
+    },
+    {
+      name: "nvim-config",
+      description:
+        "My Neovim setup, written from scratch on lazy.nvim rather than forked from a distro — every plugin in it is one I went looking for.",
+      language: "Lua",
+      url: "https://github.com/jithendrabathala/nvim-config",
+    },
+    {
+      name: "portfolio",
+      description:
+        "This site. Next.js with scroll-driven sections, and every line of copy in a single content file.",
+      language: "TypeScript",
+      url: "https://github.com/jithendrabathala/portfolio",
     },
   ],
 };
@@ -494,6 +635,36 @@ export const oss: {
 export const siteMeta = {
   title: `${profile.name} — ${profile.role}`,
   description: profile.tagline,
-  /** Set this once you have a domain; used for OG tags. */
-  url: "https://example.com",
+  /**
+   * The canonical origin. No trailing slash — it is concatenated in robots.ts
+   * and used as the sitemap's single entry, and a double slash there is the
+   * kind of thing a crawler quietly holds against you.
+   */
+  url: "https://jithendra.dpdns.org",
+  /**
+   * Search keywords. Worth setting straight: Google has ignored the keywords
+   * meta tag for well over a decade, so this earns nothing there. It is still
+   * read by some other engines and by link-preview scrapers, and it costs one
+   * line — but the ranking work is done by the title, description, headings,
+   * and the JSON-LD in app/layout.tsx, not by this array.
+   */
+  keywords: [
+    "Jithendra Bathala",
+    "software engineer",
+    "full stack developer",
+    "backend engineer",
+    "TypeScript",
+    "React",
+    "Next.js",
+    "NestJS",
+    "Node.js",
+    "Java",
+    "Spring Boot",
+    "Postgres",
+    "AWS",
+    "system design",
+    "portfolio",
+    "Hyderabad",
+    "India",
+  ],
 } as const;

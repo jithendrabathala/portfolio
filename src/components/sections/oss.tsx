@@ -23,6 +23,7 @@ const LANGUAGE_COLOR: Record<string, string> = {
   Rust: "#dea584",
   Python: "#3572a5",
   JavaScript: "#f1e05a",
+  Lua: "#000080",
 };
 
 export function Oss() {
@@ -107,16 +108,22 @@ export function Oss() {
                       />
                       {repo.language}
                     </span>
-                    <span className="flex items-center gap-1.5 tabular-nums">
-                      <Star aria-hidden="true" className="size-3" />
-                      {repo.stars}
-                      <span className="sr-only">stars</span>
-                    </span>
-                    <span className="flex items-center gap-1.5 tabular-nums">
-                      <GitFork aria-hidden="true" className="size-3" />
-                      {repo.forks}
-                      <span className="sr-only">forks</span>
-                    </span>
+                    {/* Counts are opt-in. A repo with none renders its
+                        language alone rather than a row of zeroes. */}
+                    {Boolean(repo.stars) && (
+                      <span className="flex items-center gap-1.5 tabular-nums">
+                        <Star aria-hidden="true" className="size-3" />
+                        {repo.stars}
+                        <span className="sr-only">stars</span>
+                      </span>
+                    )}
+                    {Boolean(repo.forks) && (
+                      <span className="flex items-center gap-1.5 tabular-nums">
+                        <GitFork aria-hidden="true" className="size-3" />
+                        {repo.forks}
+                        <span className="sr-only">forks</span>
+                      </span>
+                    )}
                   </div>
                 </a>
               </Reveal>
